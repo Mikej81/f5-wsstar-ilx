@@ -13,22 +13,24 @@ when HTTP_REQUEST {
     node 127.0.0.1
     
         if {[HTTP::cookie exists MRHSession]} {
-        log local0. "Redirect that MOFO: "
+        log local0. "Generate POST form and Autopost "
         #log local0. "[ACCESS::session data get session.custom.idam.response]"
         set tmpuri [URI::encode [ACCESS::session data get session.custom.idam.response]]
+        set tmpresponse [ACCESS::session data get session.custom.idam.response]
         
-        HTTP::respond 307 Location $referal$tmpuri
+        #HTTP::respond 307 Location $referal$tmpuri
+        set html "<html><script type=\"text/javascript\">window.onload=function(){ window.setTimeout(document.wsFedAuth.submit.bind(document.wsFedAuth), 5000);};</script><body>"
+        set form "<form name=\"wsFedAuth\" method=POST action=\"https://sharepoint.f5lab.com\"><input type=hidden name=wa value=wsignin1.0>"
+        set wresult "<input type=hidden name=wresult value=\"$tmpresponse\">"
+        set closeform "<input type=\"submit\" value=\"Continue\"></form/></body></html>"
+        log local0. "Site: $html$closeform"
+        HTTP::respond 200 Content "$html $form $closeform"
     
         }
 
 }
 when HTTP_RESPONSE {
-    #HTTP::respond 200 Content "<html><body>HTTP_RESPONSE<body></html>"
-    #if {[HTTP::cookie exists MRHSession]} {
-    #    log local0. "Redirect that MOFO: "
-    #    log local0. "[ACCESS::session data get session.custom.idam.response]"
-    #    HTTP::respond 302 Location [ACCESS::session data get session.custom.idam.response]
-    #}
+
 }
 
 when ACCESS_POLICY_AGENT_EVENT {
@@ -56,6 +58,8 @@ when ACCESS_ACL_ALLOWED {
     log local0. "============================================="
     
 }
+
+
 
 
 
