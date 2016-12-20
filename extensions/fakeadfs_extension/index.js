@@ -48,42 +48,18 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
     
     var wsfed_wrapper_foot = "</t:RequestedSecurityToken><t:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</t:TokenType><t:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</t:RequestType><t:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</t:KeyType></t:RequestSecurityTokenResponse>";
     			
-    //var wresult = "wa=wsignin1.0&amp;wresult=";
-     //var wresult += wsfed_wrapper_head + signedAssertion + wsfed_wrapper_foot;
      var wresult = wsfed_wrapper_head + signedAssertion + wsfed_wrapper_foot;
-     wresult += "&wctx=https://sharepoint.f5lab.com/_layouts/15/Authenticate.aspx?Source=%2F";
-    
+
     //var qencoded = encodeURI(wresult);
     var qencoded = wresult;
-    
-    /*var auth_post = https.request(post_options, function(authres) {
-     *   console.log("statusCode: ", authres.statusCode);
-     *   console.log("statusMess: ", authres.statusMessage);
-     *   console.log("headers: ", authres.headers);
-
-     *   authres.on('data', function(d) {
-     *       process.stdout.write(d);
-     *   });
-    *});
-    *auth_post.write(qencoded);
-    *auth_post.end();
-    */
     
     res.reply(qencoded);
 });
 
-/*
- * ilx.addMethod('<REMOTE_FUNC_NAME>', function(req, res) {
- *   // Function parameters can be found in req.params().
- *   console.log('params: ' + req.params());
- *   // Whatever is placed in res.reply() will be the return value from ILX::call.
- *   res.reply('<RESPONSE>');
- * });
- */
-
 
 /* Start listening for ILX::call and ILX::notify events. */
 ilx.listen();
+
 
 
 
