@@ -4,20 +4,23 @@ var f5 = require('f5-nodejs');
 
 var saml11 = require('saml').Saml11;
 var queryString = require('querystring');
-var crypto = require('crypto');
 var fs = require('fs');
 var moment = require('moment');
 var https = require('https');
 
 var timeout = 3600;
 var wsfedIssuer = "http://fakeadfs.f5lab.com/adfs/services/trust";
+var SigningCert = "/fakeadfs.f5lab.com.crt";
+var SigningKey = "/fakeadfs.f5lab.com.key";
 
 /* Create a new rpc server for listening to TCL iRule calls. */
 var ilx = new f5.ILXServer();
 
 ilx.addMethod('Generate-WSFedToken', function(req,res) {
-    var query = queryString.unescape(req.params());
+    var query = queryString.unescape(req.params()[0]);
     var queryOptions = queryString.parse(query);
+    var AttrUserName = req.params()[1];
+    var AttrUserPrincipal = req.params()[2];
      
     var wa = queryOptions.wa;
     var wtrealm = queryOptions.wtrealm;
@@ -33,14 +36,14 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
     
     //Now insert the SAML11 Assertion
     var saml11_options = {
-        cert: fs.readFileSync(__dirname + '/fakeadfs.f5lab.com.crt'),
-        key: fs.readFileSync(__dirname + '/fakeadfs.f5lab.com.key'),
-        issuer: 'http://fakeadfs.f5lab.com/adfs/services/trust',
+        cert: fs.readFileSync(__dirname + SigningCert),
+        key: fs.readFileSync(__dirname + SigningKey),
+        issuer: wsfedIssuer,
         lifetimeInSeconds: timeout,
         audiences: wtrealm,
         attributes: {
-            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress': 'mcoleman@f5lab.com',
-            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn': '0867530901@f5lab.com'
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress':  AttrUserName  ,
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn': AttrUserPrincipal
         }
     };
     
@@ -48,9 +51,8 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
     
     var wsfed_wrapper_foot = "</t:RequestedSecurityToken><t:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</t:TokenType><t:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</t:RequestType><t:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</t:KeyType></t:RequestSecurityTokenResponse>";
     			
-     var wresult = wsfed_wrapper_head + signedAssertion + wsfed_wrapper_foot;
+    var wresult = wsfed_wrapper_head + signedAssertion + wsfed_wrapper_foot;
 
-    //var qencoded = encodeURI(wresult);
     var qencoded = wresult;
     
     res.reply(qencoded);
@@ -59,10 +61,4 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
 
 /* Start listening for ILX::call and ILX::notify events. */
 ilx.listen();
-
-
-
-
-
-
 
