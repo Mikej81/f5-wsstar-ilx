@@ -2,12 +2,24 @@
 /* Import the f5-nodejs module. */
 var f5 = require('f5-nodejs');
 
+/* Import the additional Node.JS Modules
+   npm install saml
+   npm install querystring
+   npm install fs 
+   npm install moment 
+   npm install https 
+*/
 var saml11 = require('saml').Saml11;
 var queryString = require('querystring');
 var fs = require('fs');
 var moment = require('moment');
 var https = require('https');
 
+/*  timeout is the length of time for the assertion validity
+    wsfedIssuer is, believe it or not, the Issuer
+    SigningCert, SigningKey are the required certificate and key pair
+     for signing the assertion and specifically the DigestValue.
+*/
 var timeout = 3600;
 var wsfedIssuer = "http://fakeadfs.f5lab.com/adfs/services/trust";
 var SigningCert = "/fakeadfs.f5lab.com.crt";
@@ -17,6 +29,10 @@ var SigningKey = "/fakeadfs.f5lab.com.key";
 var ilx = new f5.ILXServer();
 
 ilx.addMethod('Generate-WSFedToken', function(req,res) {
+    /* Extract the ILX parameters to add to the Assertion data
+       req.params()[0] is the first passed argument
+       req.params()[1] is the second passed argument, and so on.
+    */
     var query = queryString.unescape(req.params()[0]);
     var queryOptions = queryString.parse(query);
     var AttrUserName = req.params()[1];
@@ -26,6 +42,8 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
     var wtrealm = queryOptions.wtrealm;
     var wctx = queryOptions.wctx;
     
+    /* This is where the WS-Fed gibberish is assembled.  Moment is required to 
+       insert the properly formatted time stamps.*/
     var now = moment.utc();
     var wsfed_wrapper_head = "<t:RequestSecurityTokenResponse xmlns:t=\"http://schemas.xmlsoap.org/ws/2005/02/trust\">";
      wsfed_wrapper_head += "<t:Lifetime><wsu:Created xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">" + now.format('YYYY-MM-DDTHH:mm:ss.SSS[Z]') +"</wsu:Created>";
@@ -34,7 +52,16 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
      wsfed_wrapper_head += "<wsa:Address>" + wtrealm + "</wsa:Address>";
      wsfed_wrapper_head += "</wsa:EndpointReference></wsp:AppliesTo><t:RequestedSecurityToken>";
     
-    //Now insert the SAML11 Assertion
+    /* Generate and insert the SAML11 Assertion.  These attributed are 
+       configured previously in the code.
+       
+       cert: this is the cert used for encryption
+       key: this is the key used for the cert
+       issuer: the assertion issuer 
+       lifetimeInSeconds: timeout
+       audiences: this is the application ID for sharepoint, urn:sharepoint:webapp
+       attributes:  these should map to the mappings created for the IDP in SharePoint
+       */
     var saml11_options = {
         cert: fs.readFileSync(__dirname + SigningCert),
         key: fs.readFileSync(__dirname + SigningKey),
@@ -47,18 +74,19 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
         }
     };
     
+    /* Sign the Assertion */
     var signedAssertion = saml11.create(saml11_options);
     
+    /* Add the WS-Fed footer */
     var wsfed_wrapper_foot = "</t:RequestedSecurityToken><t:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</t:TokenType><t:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</t:RequestType><t:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</t:KeyType></t:RequestSecurityTokenResponse>";
-    			
+    /* Put them all together */			
     var wresult = wsfed_wrapper_head + signedAssertion + wsfed_wrapper_foot;
-
-    var qencoded = wresult;
-    
-    res.reply(qencoded);
+    /* respond back to TCL with the complete assertion */
+    res.reply(wresult);
 });
 
 
 /* Start listening for ILX::call and ILX::notify events. */
 ilx.listen();
+
 
