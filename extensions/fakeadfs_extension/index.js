@@ -52,7 +52,7 @@ var wsfedIssuer = "http://fakeadfs.f5lab.com/adfs/services/trust";
 var SigningCertpath = "/fakeadfs.f5lab.com.crt";
 var SigningKeypath = "/fakeadfs.f5lab.com.key";
 
-var SigningCert = fs.readFileSync(__dirname +SingingCertpath);
+var SigningCert = fs.readFileSync(__dirname +SigningCertpath);
 var SigningKey = fs.readFileSync(__dirname +SigningKeypath);
 
 /*
