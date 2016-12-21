@@ -1,4 +1,6 @@
-
+/* iRulesLX FakeADFS, Michael Coleman
+   Michael@f5.com
+   */
 /* Import the f5-nodejs module. */
 var f5 = require('f5-nodejs');
 
@@ -7,8 +9,33 @@ var f5 = require('f5-nodejs');
    npm install querystring
    npm install fs 
    npm install moment 
-   npm install https 
+   npm install https
+   
+   When the saml module is loaded, edit the saml11.template under /lib/
+   to resemble the following:
+   
+   <saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" MajorVersion="1" MinorVersion="1" AssertionID="" IssueInstant="">
+  <saml:Conditions>
+    <saml:AudienceRestrictionCondition />
+  </saml:Conditions>
+  <saml:AttributeStatement>
+    <saml:Subject>
+      <saml:SubjectConfirmation>
+        <saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:bearer</saml:ConfirmationMethod>
+      </saml:SubjectConfirmation>
+    </saml:Subject>
+  </saml:AttributeStatement>
+  <saml:AuthenticationStatement 
+      AuthenticationMethod="urn:oasis:names:tc:SAML:1.0:am:password">
+    <saml:Subject>
+       <saml:SubjectConfirmation>
+          <saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:bearer</saml:ConfirmationMethod>
+       </saml:SubjectConfirmation>
+    </saml:Subject>
+  </saml:AuthenticationStatement>
+</saml:Assertion>
 */
+
 var saml11 = require('saml').Saml11;
 var queryString = require('querystring');
 var fs = require('fs');
@@ -22,8 +49,21 @@ var https = require('https');
 */
 var timeout = 3600;
 var wsfedIssuer = "http://fakeadfs.f5lab.com/adfs/services/trust";
-var SigningCert = "/fakeadfs.f5lab.com.crt";
-var SigningKey = "/fakeadfs.f5lab.com.key";
+var SigningCertpath = "/fakeadfs.f5lab.com.crt";
+var SigningKeypath = "/fakeadfs.f5lab.com.key";
+
+var SigningCert = fs.readFileSync(__dirname +SingingCertpath);
+var SigningKey = fs.readFileSync(__dirname +SigningKeypath);
+
+/*
+  Some Attribute Mapping Claims Options
+  Source:  https://technet.microsoft.com/en-us/library/ee913589(v=ws.11).aspx
+  
+  http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress
+  http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn
+  http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname
+*/
+
 
 /* Create a new rpc server for listening to TCL iRule calls. */
 var ilx = new f5.ILXServer();
@@ -63,8 +103,8 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
        attributes:  these should map to the mappings created for the IDP in SharePoint
        */
     var saml11_options = {
-        cert: fs.readFileSync(__dirname + SigningCert),
-        key: fs.readFileSync(__dirname + SigningKey),
+        cert: SigningCert,
+        key: SigningKey,
         issuer: wsfedIssuer,
         lifetimeInSeconds: timeout,
         audiences: wtrealm,
@@ -88,5 +128,4 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
 
 /* Start listening for ILX::call and ILX::notify events. */
 ilx.listen();
-
 
