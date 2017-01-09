@@ -1,5 +1,4 @@
 when HTTP_REQUEST {
-    
     #  Wctx: This is some session data that the application wants sent back to 
     #  it after the user authenticates.
     set wctx [URI::decode [URI::query [HTTP::uri] wctx]]
@@ -11,10 +10,11 @@ when HTTP_REQUEST {
     #  here.
 
     #  Kept getting errors from APM, this fixed it.
-    node 127.0.0.1
+    node 127.0.0.1    
     
     #  Make sure that the user has authenticated and APM has created a session.
     if {[HTTP::cookie exists MRHSession]} {
+
         #log local0. "Generate POST form and Autopost "
 
         #  tmpresponse is the WS-Fed Assertion data, unencoded, so straight XML
@@ -24,7 +24,7 @@ when HTTP_REQUEST {
         #  SharePoint, this was the easiest way to solve that issue.  Set timeout
         #  to half a second, but can be adjusted as needed.
         set htmltop "<html><script type='text/javascript'>window.onload=function(){ window.setTimeout(document.wsFedAuth.submit.bind(document.wsFedAuth), 500);};</script><body>"
-        set htmlform "<form name='wsFedAuth' method=POST action='https://sharepoint.f5lab.com/_trust/'><input type=hidden name=wa value=$wa><input type=hidden name=wresult value='$tmpresponse'><input type=hidden name=wctx value=$wctx><input type='submit' value='Continue'></form/>"
+        set htmlform "<form name='wsFedAuth' method=POST action='https://sharepoint.f5lab.com/_trust/default.aspx?trust=FakeADFS'><input type=hidden name=wa value=$wa><input type=hidden name=wresult value='$tmpresponse'><input type=hidden name=wctx value=$wctx><input type='submit' value='Continue'></form/>"
         set htmlbottom "</body></html>"
         set page "$htmltop $htmlform $htmlbottom"
         
@@ -88,4 +88,7 @@ when ACCESS_ACL_ALLOWED {
     HTTP::cookie insert name "MSISLoopDetectionCookie" value "ABCD" path "/adfs"
     
 }
+
+
+
 

@@ -5,11 +5,15 @@
 var f5 = require('f5-nodejs');
 
 /* Import the additional Node.JS Modules
+   If from scratch:
    npm install saml
    npm install querystring
    npm install fs 
    npm install moment 
    npm install https
+   
+   If importing the ILX Workspace:
+   npm update
    
    When the saml module is loaded, edit the saml11.template under /lib/
    to resemble the following:
@@ -55,6 +59,13 @@ var SigningKeypath = "/fakeadfs.f5lab.com.key";
 var SigningCert = fs.readFileSync(__dirname +SigningCertpath);
 var SigningKey = fs.readFileSync(__dirname +SigningKeypath);
 
+/* These are for IDP initated SSO requets, since the Querystring will be
+   blank.
+   */
+var idp_wa = "signin1.0";
+var idp_wtrealm = "urn:sharepoint:f5lab";
+var idp_wctx = "https://sharepoint.f5lab.com/_layouts/15/Authenticate.aspx?Source=%2F";
+
 /*
   Some Attribute Mapping Claims Options
   Source:  https://technet.microsoft.com/en-us/library/ee913589(v=ws.11).aspx
@@ -77,10 +88,25 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
     var queryOptions = queryString.parse(query);
     var AttrUserName = req.params()[1];
     var AttrUserPrincipal = req.params()[2];
-     
+    
+    /* If incoming request is IDP initiated, the Querystrings will not 
+       be populated, so lets check, and if undefined, populate with static
+       IDP config vars.
+       */ 
     var wa = queryOptions.wa;
+    if (typeof wa == 'undefined') {
+        wa = idp_wa;
+    }
     var wtrealm = queryOptions.wtrealm;
+    if (typeof wtrealm == 'undefined') {
+        wtrealm = idp_wtrealm;
+    }
     var wctx = queryOptions.wctx;
+    if (typeof wctx == 'undefined') {
+        wctx = idp_wctx;
+    }
+    
+    console.log("wa=" + wa + ", wtrealm=" + wtrealm + ", wctx=" + wctx);
     
     /* This is where the WS-Fed gibberish is assembled.  Moment is required to 
        insert the properly formatted time stamps.*/
@@ -128,4 +154,8 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
 
 /* Start listening for ILX::call and ILX::notify events. */
 ilx.listen();
+
+
+
+
 
