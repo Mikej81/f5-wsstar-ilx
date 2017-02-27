@@ -9,7 +9,9 @@ Modified to support multiple FQDNs and Trusted Identity Providers on a single vi
 ```
 ## Usage
 See included PDF.
+Etensive notes are in the code.  
 
 ## Release History
 
 * 0.2.0 Initial release
+* 0.3.0 Multiple FQDN Support added - Jeff larmore
