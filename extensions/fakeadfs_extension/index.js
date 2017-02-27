@@ -52,9 +52,9 @@ var https = require('https');
      for signing the assertion and specifically the DigestValue.
 */
 var timeout = 3600;
-var wsfedIssuer = "http://fakeadfs.f5lab.com/adfs/services/trust";
-var SigningCertpath = "/fakeadfs.f5lab.com.crt";
-var SigningKeypath = "/fakeadfs.f5lab.com.key";
+var wsfedIssuer = "http://f5adfs.lab.local/adfs/services/trust";
+var SigningCertpath = "/F5ADFS.lab.local.crt";
+var SigningKeypath = "/F5ADFS.lab.local.key";
 
 var SigningCert = fs.readFileSync(__dirname +SigningCertpath);
 var SigningKey = fs.readFileSync(__dirname +SigningKeypath);
@@ -62,9 +62,16 @@ var SigningKey = fs.readFileSync(__dirname +SigningKeypath);
 /* These are for IDP initated SSO requets, since the Querystring will be
    blank.
    */
+   
 var idp_wa = "signin1.0";
-var idp_wtrealm = "urn:sharepoint:f5lab";
-var idp_wctx = "https://sharepoint.f5lab.com/_layouts/15/Authenticate.aspx?Source=%2F";
+var idp_wtrealm = "";
+var idp_wctx = "";
+
+ /* Set them as blank above because these are not IDP initiated requests
+var idp_wa = "signin1.0";
+var idp_wtrealm = "urn:sharepoint:app1";
+var idp_wctx = "https://sp_kerb.lab.local/_layouts/15/Authenticate.aspx?Source=%2F";
+*/
 
 /*
   Some Attribute Mapping Claims Options
@@ -86,8 +93,12 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
     */
     var query = queryString.unescape(req.params()[0]);
     var queryOptions = queryString.parse(query);
-    var AttrUserName = req.params()[1];
+    var AttrSurName = req.params()[1];
     var AttrUserPrincipal = req.params()[2];
+    var AttrGivenName = req.params()[3];
+    var AttrEmailAddress = req.params()[4];
+    var AttrDisplayName = req.params()[5];
+    
     
     /* If incoming request is IDP initiated, the Querystrings will not 
        be populated, so lets check, and if undefined, populate with static
@@ -118,7 +129,7 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
      wsfed_wrapper_head += "<wsa:Address>" + wtrealm + "</wsa:Address>";
      wsfed_wrapper_head += "</wsa:EndpointReference></wsp:AppliesTo><t:RequestedSecurityToken>";
     
-    /* Generate and insert the SAML11 Assertion.  These attributed are 
+    /* Generate and insert the SAML11 Assertion.  These attributes are 
        configured previously in the code.
        
        cert: this is the cert used for encryption
@@ -135,8 +146,11 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
         lifetimeInSeconds: timeout,
         audiences: wtrealm,
         attributes: {
-            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress':  AttrUserName  ,
-            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn': AttrUserPrincipal
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress':  AttrEmailAddress  ,
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn': AttrUserPrincipal  ,
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname': AttrGivenName  ,
+            'http://schemas.microsoft.com/ws/2008/06/identity/claims/userdata': AttrDisplayName  ,
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname': AttrSurName 
         }
     };
     
@@ -154,6 +168,13 @@ ilx.addMethod('Generate-WSFedToken', function(req,res) {
 
 /* Start listening for ILX::call and ILX::notify events. */
 ilx.listen();
+
+
+
+
+
+
+
 
 
 
