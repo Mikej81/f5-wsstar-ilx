@@ -8,7 +8,10 @@ Modified to support multiple FQDNs and Trusted Identity Providers on a single vi
   import tgz to BIG-IP - See included PDF
 ```
 ## Usage
-See included PDF.
+IDP initiated use-case requires a single VS, it does not require any SAML IDP or SP configurations as the initial Client Auth can be anything, the WS-Fed assertion is generated on the Server side, and posted to the Application.
+
+For multiple VS scenarios, see included PDF.
+
 Etensive notes are in the code.  
 
 ## Release History
