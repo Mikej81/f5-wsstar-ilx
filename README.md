@@ -10,6 +10,8 @@ Modified to support multiple FQDNs and Trusted Identity Providers on a single vi
 
 May work better building from scratch in some environments.  
 
+https://devcentral.f5.com/articles/big-ip-iruleslx-fakeadfs-ws-federation-saml11-24608
+
 ## Usage
 IDP initiated use-case requires a single VS, it does not require any SAML IDP or SP configurations as the initial Client Auth can be anything, the WS-Fed assertion is generated on the Server side, and posted to the Application.
 
