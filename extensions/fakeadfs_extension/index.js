@@ -53,10 +53,17 @@ var moment = require('moment')
     SigningCert, SigningKey are the required certificate and key pair
      for signing the assertion and specifically the DigestValue.
 */
+<<<<<<< HEAD
 var timeout = 3600
 var wsfedIssuer = 'http://fakeadfs.f5lab.com/adfs/services/trust'
 var SigningCertpath = '/fakeadfs.f5lab.com.crt'
 var SigningKeypath = '/fakeadfs.f5lab.com.key'
+=======
+var timeout = 3600;
+var wsfedIssuer = "http://f5adfs.lab.local/adfs/services/trust";
+var SigningCertpath = "/F5ADFS.lab.local.crt";
+var SigningKeypath = "/F5ADFS.lab.local.key";
+>>>>>>> origin/master
 
 var SigningCert = fs.readFileSync(path.join(__dirname, SigningCertpath))
 var SigningKey = fs.readFileSync(path.join(__dirname, SigningKeypath))
@@ -64,9 +71,22 @@ var SigningKey = fs.readFileSync(path.join(__dirname, SigningKeypath))
 /* These are for IDP initated SSO requets, since the Querystring will be
    blank.
    */
+<<<<<<< HEAD
 var idp_wa = 'signin1.0'
 var idp_wtrealm = 'urn:sharepoint:f5lab'
 var idp_wctx = 'https://sharepoint.f5lab.com/_layouts/15/Authenticate.aspx?Source=%2F'
+=======
+   
+var idp_wa = "signin1.0";
+var idp_wtrealm = "";
+var idp_wctx = "";
+
+ /* Set them as blank above because these are not IDP initiated requests
+var idp_wa = "signin1.0";
+var idp_wtrealm = "urn:sharepoint:app1";
+var idp_wctx = "https://sp_kerb.lab.local/_layouts/15/Authenticate.aspx?Source=%2F";
+*/
+>>>>>>> origin/master
 
 /*
   Some Attribute Mapping Claims Options
@@ -109,6 +129,7 @@ ilx.addMethod('Generate-WSFedToken', function (req, res) {
        req.params()[0] is the first passed argument
        req.params()[1] is the second passed argument, and so on.
     */
+<<<<<<< HEAD
   var query = queryString.unescape(req.params()[0])
   var queryOptions = queryString.parse(query)
   var AttrUserName = req.params()[1]
@@ -144,6 +165,47 @@ ilx.addMethod('Generate-WSFedToken', function (req, res) {
   wsfed_wrapper_head += '</wsa:EndpointReference></wsp:AppliesTo><t:RequestedSecurityToken>'
 
     /* Generate and insert the SAML11 Assertion.  These attributed are
+=======
+    var query = queryString.unescape(req.params()[0]);
+    var queryOptions = queryString.parse(query);
+    var AttrSurName = req.params()[1];
+    var AttrUserPrincipal = req.params()[2];
+    var AttrGivenName = req.params()[3];
+    var AttrEmailAddress = req.params()[4];
+    var AttrDisplayName = req.params()[5];
+    
+    
+    /* If incoming request is IDP initiated, the Querystrings will not 
+       be populated, so lets check, and if undefined, populate with static
+       IDP config vars.
+       */ 
+    var wa = queryOptions.wa;
+    if (typeof wa == 'undefined') {
+        wa = idp_wa;
+    }
+    var wtrealm = queryOptions.wtrealm;
+    if (typeof wtrealm == 'undefined') {
+        wtrealm = idp_wtrealm;
+    }
+    var wctx = queryOptions.wctx;
+    if (typeof wctx == 'undefined') {
+        wctx = idp_wctx;
+    }
+    
+    console.log("wa=" + wa + ", wtrealm=" + wtrealm + ", wctx=" + wctx);
+    
+    /* This is where the WS-Fed gibberish is assembled.  Moment is required to 
+       insert the properly formatted time stamps.*/
+    var now = moment.utc();
+    var wsfed_wrapper_head = "<t:RequestSecurityTokenResponse xmlns:t=\"http://schemas.xmlsoap.org/ws/2005/02/trust\">";
+     wsfed_wrapper_head += "<t:Lifetime><wsu:Created xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">" + now.format('YYYY-MM-DDTHH:mm:ss.SSS[Z]') +"</wsu:Created>";
+     wsfed_wrapper_head += "<wsu:Expires xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">" + now.add(timeout, 'seconds').format('YYYY-MM-DDTHH:mm:ss.SSS[Z]') + "</wsu:Expires>";
+     wsfed_wrapper_head += "</t:Lifetime><wsp:AppliesTo xmlns:wsp=\"http://schemas.xmlsoap.org/ws/2004/09/policy\"><wsa:EndpointReference xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">";
+     wsfed_wrapper_head += "<wsa:Address>" + wtrealm + "</wsa:Address>";
+     wsfed_wrapper_head += "</wsa:EndpointReference></wsp:AppliesTo><t:RequestedSecurityToken>";
+    
+    /* Generate and insert the SAML11 Assertion.  These attributes are 
+>>>>>>> origin/master
        configured previously in the code.
 
        cert: this is the cert used for encryption
@@ -153,6 +215,7 @@ ilx.addMethod('Generate-WSFedToken', function (req, res) {
        audiences: this is the application ID for sharepoint, urn:sharepoint:webapp
        attributes:  these should map to the mappings created for the IDP in SharePoint
        */
+<<<<<<< HEAD
   var saml11_options = {
     cert: SigningCert,
     key: SigningKey,
@@ -165,6 +228,23 @@ ilx.addMethod('Generate-WSFedToken', function (req, res) {
     }
   }
 
+=======
+    var saml11_options = {
+        cert: SigningCert,
+        key: SigningKey,
+        issuer: wsfedIssuer,
+        lifetimeInSeconds: timeout,
+        audiences: wtrealm,
+        attributes: {
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress':  AttrEmailAddress  ,
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn': AttrUserPrincipal  ,
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname': AttrGivenName  ,
+            'http://schemas.microsoft.com/ws/2008/06/identity/claims/userdata': AttrDisplayName  ,
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname': AttrSurName 
+        }
+    };
+    
+>>>>>>> origin/master
     /* Sign the Assertion */
   var signedAssertion = saml11.create(saml11_options)
 
@@ -177,4 +257,20 @@ ilx.addMethod('Generate-WSFedToken', function (req, res) {
 })
 
 /* Start listening for ILX::call and ILX::notify events. */
+<<<<<<< HEAD
 ilx.listen()
+=======
+ilx.listen();
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> origin/master
