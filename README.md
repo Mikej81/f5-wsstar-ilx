@@ -21,8 +21,6 @@ Etensive notes are in the code.
 Working on adding Ws-Trust support.  FederationMetadata is mostly complete, endpoints currently have to be changed in federationmetadata.template, but this will be dynamic in later code updates.
 
 ## Release History
-
-MJC Branch
 * 0.1.0 Initial release
 * 0.2.0 Minor tweaks
 * 0.3.0 Multiple FQDN Support added - Jeff larmore
