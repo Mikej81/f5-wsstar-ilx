@@ -26,9 +26,9 @@ exports.reportError = function (err, callback) {
  * @api private
  */
 exports.uid = function (len) {
-  var buf = [],
-    chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
-    charlen = chars.length
+  var buf = []
+  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  var charlen = chars.length
 
   for (var i = 0; i < len; ++i) {
     buf.push(chars[getRandomInt(0, charlen - 1)])

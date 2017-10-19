@@ -25,8 +25,7 @@ var algorithms = {
 }
 
 function getEndpointAddress (req, endpointPath) {
-  endpointPath = endpointPath ||
-	(req.originalUrl.substr(0, req.originalUrl.length - URL_PATH.length))
+  endpointPath = endpointPath || (req.originalUrl.substr(0, req.originalUrl.length - URL_PATH.length))
   return utils.getBaseUrl(req) + endpointPath
 }
 
@@ -73,9 +72,7 @@ function generatemetadata (options, reqissuer, reqendpoint) {
   var cert = utils.pemToCert(options.cert)
 
   var sig = new SignedXml(null, { signatureAlgorith: algorithms.signature[options.signatureAlgorithm], idAttribute: 'ID' })
-  sig.addReference("//*[local-name(.)='EntityDescriptor']",
-		['http://www.w3.org/2000/09/xmldsig#enveloped-signature', 'http://www.w3.org/2001/10/xml-exc-c14n#'],
-		algorithms.digest[options.digestAlgorithm])
+  sig.addReference("//*[local-name(.)='EntityDescriptor']", ['http://www.w3.org/2000/09/xmldsig#enveloped-signature', 'http://www.w3.org/2001/10/xml-exc-c14n#'], algorithms.digest[options.digestAlgorithm])
 
   sig.signingKey = options.key
 
@@ -97,11 +94,11 @@ function generatemetadata (options, reqissuer, reqendpoint) {
     return utils.reportError(err, callback)
   }
 
-	// Set ID and Issuer in Metadata
+  // Set ID and Issuer in Metadata
   doc.documentElement.setAttribute('ID', '_' + (options.uid || utils.uid(32)))
   doc.documentElement.setAttribute('entityID', (options.issuer || 'https://test.domain.com/STS'))
 
-	// Insert Signing Key
+  // Insert Signing Key
   var roleDescriptor = doc.getElementsByTagName('RoleDescriptor')[0]
   var keyDescriptor = doc.createElement('KeyDescriptor')
   keyDescriptor.setAttribute('use', 'signing')
@@ -144,10 +141,10 @@ module.exports = generatemetadata
 //  var SigningKey = fs.readFileSync(__dirname + SigningKeypath)
 //
 //  var opts = {
-//    issuer:	'https://fakeadfs.f5lab.com',
-//    endpointPath:	'/federationmetadata/2007-06/federationmetadata.xml',
-//    cert:	SigningCert,
-//    key:	SigningKey
+//  //    issuer: 'https://fakeadfs.f5lab.com',
+//  //    endpointPath: '/federationmetadata/2007-06/federationmetadata.xml',
+//  //    cert: SigningCert,
+//  //    key: SigningKey
 //  }
 //  var console = generatemetadata(opts, 'https://fakeadfs.f5lab.com', '/federationmetadata/2007-06/federationmetadata.xml')
 //  return console
