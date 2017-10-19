@@ -9,7 +9,21 @@ when HTTP_REQUEST {
             set fakeadfs_response [ILX::call $fakeadfs_preapm Generate-FederationMetadata $issuer $endpoint]
             HTTP::respond 200 content $fakeadfs_response Content-Type "application/xml"
         }
+        *"*/STS/Login.aspx*" {
+            #Act as STS Login Provider
+            #  WIF applications will do a passive redirect to STS to auth.
+            #  Maybe let APM handle this landinguri.
+
+        }
+        "*adfs/services/trust/*" {
+            #Act as WS-Trust Provider
+            #Path can determine Auth Type, I dont want to code all of these so will have to pick a few important ones.
+            #  *adfs/services/trust/*/certificate
+            #  *adfs/services/trust/*/username
+            #  *adfs/services/trust/*/issuedtoken*
+        }
         "*/adfs/ls*" {
+            #  Act as WS-Federation Provider
             #  Wctx: This is some session data that the application wants sent back to 
             #  it after the user authenticates.
             set wctx [URI::decode [URI::query [HTTP::uri] wctx]]
