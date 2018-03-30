@@ -1,0 +1,71 @@
+{
+  "server": {
+    "ip": "127.0.0.1",
+    "port": 8443,
+    "cert": "./fakeadfs.crt",
+    "key": "./fakeadfs.key"
+  },
+  "session": {
+    "name": "FakeADFS",
+    "secret": "FakeADFSsecret"
+  },
+  "federation": {
+    "issuer": "http://fakeadfs.f5lab.com",
+    "certs": {
+      "issuercert": "./fakeadfs.crt",
+      "issuerkey": "./fakeadfs.key",
+      "tokendecryptcert": "./fakeadfs.crt",
+      "tokendecryptkey": "./fakeadfs.key",
+      "tokensigningcert": "./fakeadfs.crt",
+      "tokensigningkey": "./fakeadfs.key"
+    },
+    "timeout": "28800",
+    "attributes": {
+      "email": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+      "upn": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn",
+      "givenname": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname",
+      "displayname": "http://schemas.microsoft.com/ws/2008/06/identity/claims/userdata",
+      "surname": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname",
+      "group": "http://schemas.xmlsoap.org/claims/Group",
+      "role": "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
+      "windowsaccount": "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname"
+    },
+    "metadata": {
+      "issuer": "",
+      "endpointpath": "",
+      "cert": "",
+      "key": "",
+      "digestalgorith": "",
+      "signaturealgorith": ""
+    },
+    "idp": {
+      "wa": "signin1.0",
+      "wctx": "https://authentication.url.com/login.aspx",
+      "wtrealm": "urn:sharepoint:*"
+    },
+    "saml": {
+      "signature": {
+        "rsa-sha256": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+        "rsa-sha1": "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+      },
+      "digest": {
+        "sha256": "http://www.w3.org/2001/04/xmlenc#sha256",
+        "sha1": "http://www.w3.org/2000/09/xmldsig#sha1"
+      }
+    },
+    "relyingpartners": [
+      { "name": "urn:sharepoint:f5lab",
+        "options": {
+          "encryption": "",
+          "signature": "",
+          "acceptedclaims": ["role", "name"],
+          "endpoints": { "url": "https://sharepoint.f5lab.com/_trust/", "binding": "POST" } } },
+      { "name":"https://app.f5lab.com/WFE",
+        "options": {
+          "encryption": "",
+          "signature": "",
+          "acceptedclaims": ["role", "name"],
+          "endpoints": { "url": "https://app.f5lab.com/WFE", "binding": "POST" } } }
+     ]
+  }
+}
