@@ -1,6 +1,7 @@
-
 when HTTP_REQUEST {
-
+  # save hostname for use in response
+  set fqdn_name [HTTP::host]
+  
     switch -glob [string tolower [HTTP::path]] {
         "*/federationmetadata/2007-06/federationmetadata.xml" {
             #Act as the STS Metadataprovider
@@ -24,6 +25,7 @@ when HTTP_REQUEST {
             #  *adfs/services/trust/*/issuedtoken*
         }
         "*/adfs/ls*" {
+            log local0. ".../adfs/ls path..."
             #  Act as WS-Federation Provider
             #  Wctx: This is some session data that the application wants sent back to 
             #  it after the user authenticates.
@@ -39,12 +41,12 @@ when HTTP_REQUEST {
             node 127.0.0.1    
             
             #  Make sure that the user has authenticated and APM has created a session.
-            if {[HTTP::cookie exists MRHSession]} {
+            if {[HTTP::cookie exists MRHSession] } {
         
-                log local0. "Generate POST form and Autopost "
+                #log local0. "Generate POST form and Autopost "
         
                 #  tmpresponse is the WS-Fed Assertion data, unencoded, so straight XML
-                set tmpresponse [ACCESS::session data get session.custom.idam.response]
+                set tmpresponse [ACCESS::session data get session.custom.idam.wsfedtoken]
         
                 #  This was the pain to figure out.  The assertion has to be POSTed to 
                 #  SharePoint, this was the easiest way to solve that issue.  Set timeout
@@ -58,33 +60,44 @@ when HTTP_REQUEST {
             }
         }
         default {
-            #  Wctx: This is some session data that the application wants sent back to 
-    #  it after the user authenticates.
-    set wctx [URI::decode [URI::query [HTTP::uri] wctx]]
-    #  Wa=signin1.0: This tells the ADFS server to invoke a login for the user.
-    set wa [URI::decode [URI::query [HTTP::uri] wa]]
-    #  Wtrealm: This tells ADFS what application I was trying to get to. 
-    #  This has to match the identifier of one of the relying party trusts 
-    #  listed in ADFS.  wtrealm is used in the Node.JS side, but we dont need it 
-    #  here.
-        node 127.0.0.1
-            if {[HTTP::cookie exists MRHSession]} {
-                        #log local0. "Generate POST form and Autopost "
-
-        #  tmpresponse is the WS-Fed Assertion data, unencoded, so straight XML
-        set tmpresponse [ACCESS::session data get session.custom.idam.response]
-
-        #  This was the pain to figure out.  The assertion has to be POSTed to 
-        #  SharePoint, this was the easiest way to solve that issue.  Set timeout
-        #  to half a second, but can be adjusted as needed.
-        set htmltop "<html><script type='text/javascript'>window.onload=function(){ window.setTimeout(document.wsFedAuth.submit.bind(document.wsFedAuth), 500);};</script><body>"
-        set htmlform "<form name='wsFedAuth' method=POST action='https://sharepoint.f5lab.com/_trust/default.aspx?trust=FakeADFS'><input type=hidden name=wa value=$wa><input type=hidden name=wresult value='$tmpresponse'><input type=hidden name=wctx value=$wctx><input type='submit' value='Continue'></form/>"
-        set htmlbottom "</body></html>"
-        set page "$htmltop $htmlform $htmlbottom"
+        log local0. "::Default path::"
+        #  Wctx: This is some session data that the application wants sent back to 
+        #  it after the user authenticates.
+        set wctx [URI::decode [URI::query [HTTP::uri] wctx]]
+        #  Wa=signin1.0: This tells the ADFS server to invoke a login for the user.
+        set wa [URI::decode [URI::query [HTTP::uri] wa]]
+        #  Wtrealm: This tells ADFS what application I was trying to get to. 
+        #  This has to match the identifier of one of the relying party trusts 
+        #  listed in ADFS.  wtrealm is used in the Node.JS side, but we dont need it 
+        #  here.
         
-        HTTP::respond 200 content $page
+        #log local0. "Cookie: [HTTP::cookie MRHSession]"
+        #log local0. "Cookie: [HTTP::cookie FedAuth]"
+        #log local0. "Method: [HTTP::method]"
+        #log local0. "wsFed:  [ACCESS::session data get session.custom.idam.wsfedtoken]"
+        
+            if {[HTTP::cookie exists MRHSession] && 
+                ([HTTP::method] ne "POST") &&
+                not ( [HTTP::cookie exists FedAuth] ) &&
+                [ACCESS::session data get session.custom.idam.wsfedtoken] ne ""} {
+                node 127.0.0.1
+                log local0. "...MRHSession && WSFedToken Exist, FedAuth Cookie Does Not... "
+
+                #  tmpresponse is the WS-Fed Assertion data, unencoded, so straight XML
+                set tmpresponse [ACCESS::session data get session.custom.idam.wsfedtoken]
+        
+                #  This was the pain to figure out.  The assertion has to be POSTed to 
+                #  SharePoint, this was the easiest way to solve that issue.  Set timeout
+                #  to half a second, but can be adjusted as needed.
+                set currentHost [HTTP::host]
+                set htmltop "<html><script type='text/javascript'>window.onload=function(){ window.setTimeout(document.wsFedAuth.submit.bind(document.wsFedAuth), 500);};</script><body>"
+                set htmlform "<form name='wsFedAuth' method=POST action='https://$currentHost/_trust/default.aspx?trust=FakeADFS'><input type=hidden name=wa value=$wa><input type=hidden name=wresult value='$tmpresponse'><input type=hidden name=wctx value=$wctx><input type='submit' value='Continue'></form/>"
+                set htmlbottom "</body></html>"
+                set page "$htmltop $htmlform $htmlbottom"
+                
+                HTTP::respond 200 content $page
+                }
             }
-        }
     }
 }
 
@@ -107,7 +120,7 @@ when ACCESS_POLICY_AGENT_EVENT {
                "ADFS" {
                     log local0. "Received Process request for FakeADFS, $AttrUserName, $AttrUserPrin, $payload"
                     set wsfed_response [ILX::call $fakeadfs_handle Generate-WSFedToken $payload $AttrUserName $AttrUserPrin]
-                    ACCESS::session data set session.custom.idam.response $wsfed_response  
+                    ACCESS::session data set session.custom.idam.wsfedtoken $wsfed_response  
                }
     }
 }
@@ -141,12 +154,5 @@ when ACCESS_ACL_ALLOWED {
     HTTP::cookie insert name "MSISSignOut" value "ABCD" path "/adfs"
     HTTP::cookie insert name "MSISAuthenticated" value "ABCD" path "/adfs"
     HTTP::cookie insert name "MSISLoopDetectionCookie" value "ABCD" path "/adfs"
-    
 }
-
-
-
-
-
-
 
