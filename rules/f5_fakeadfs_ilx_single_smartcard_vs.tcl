@@ -60,7 +60,6 @@ when HTTP_REQUEST {
             }
         }
         default {
-        log local0. "::Default path::"
         #  Wctx: This is some session data that the application wants sent back to 
         #  it after the user authenticates.
         set wctx [URI::decode [URI::query [HTTP::uri] wctx]]
@@ -102,22 +101,21 @@ when HTTP_REQUEST {
 }
 
 when ACCESS_POLICY_AGENT_EVENT {
-    #  Create the ILX RPC Handler
-    set fakeadfs_handle [ILX::init f5_fakeadfs_plugin f5_fakeadfs_ilx_extension]
-    #  Payload is just the incoming Querystring
-    set payload [ACCESS::session data get session.server.landinguri]
-    #  Currently, the mapped attributes are Email & UPN.  In some environments,
-    #  this may match, for my use case, they will not, so there is an LDAP AAA
-    #  which is queried based on the logon name (email), and the UPN is retrieved
-    #  from LDAP.
-    set AttrUserName [ACCESS::session data get session.logon.last.username]
-    set AttrUserPrin [ACCESS::session data get session.ldap.last.attr.userPrincipalName ]
 
-    #  Current solution uses Node.JS SAML module and can support SAML11, as well
-    #  as SAML20.  The APM policy calls the irule even ADFS, with generates the token
-    #  based on the submitted QueryString and the logon attributed.
     switch [ACCESS::policy agent_id] { 
                "ADFS" {
+                   #  Create the ILX RPC Handler
+                    set fakeadfs_handle [ILX::init f5_fakeadfs_plugin f5_fakeadfs_ilx_extension]
+                    #  Payload is just the incoming Querystring
+                    set payload [ACCESS::session data get session.server.landinguri]
+                    #  Currently, the mapped attributes are Email & UPN.  In some environments,
+                    #  this may match, for my use case, they will not, so there is an LDAP AAA
+                    #  which is queried based on the logon name (email), and the UPN is retrieved
+                    #  from LDAP.
+    
+
+                    set AttrUserName [ACCESS::session data get session.logon.last.username]
+                    set AttrUserPrin [ACCESS::session data get session.ldap.last.attr.userPrincipalName ]
                     log local0. "Received Process request for FakeADFS, $AttrUserName, $AttrUserPrin, $payload"
                     set wsfed_response [ILX::call $fakeadfs_handle Generate-WSFedToken $payload $AttrUserName $AttrUserPrin]
                     ACCESS::session data set session.custom.idam.wsfedtoken $wsfed_response  
@@ -132,6 +130,7 @@ when ACCESS_POLICY_AGENT_EVENT {
               set tmpemail [findstr [ACCESS::session data get session.ssl.cert.x509extension] "email:" 6 " "]
               regexp {[a-zA-Z.0-9]+@[a-zA-Z.0-9]+\.[a-zA-Z]{2,}} $tmpemail cleanemail
               ACCESS::session data set session.custom.idam.email $cleanemail
+              ACCESS::session data set session.logon.last.username $cleanemail
               log local0. "Extracted Email Field: $cleanemail"
             }
             if { [ACCESS::session data get session.ssl.cert.subject] contains "CN="} {
@@ -173,12 +172,12 @@ when ACCESS_POLICY_AGENT_EVENT {
                 log local0. "EDIPI is $middle"
             }
             ACCESS::session data set session.custom.idam.common $commonName
-            ACCESS::session data set session.custom.idam.lastname $last
-            ACCESS::session data set session.custom.idam.firstname $first
-            ACCESS::session data set session.custom.idam.sam [concat [string range $first 0 0]$last]
-            ACCESS::session data set session.custom.idam.dn "CN=$commonName,$ldap_user_dn_suffix"
-            ACCESS::session data set session.custom.idam.cn $commonName
-            ACCESS::session data set session.custom.idam.fullcn $fullcn
+            #ACCESS::session data set session.custom.idam.lastname $last
+            #ACCESS::session data set session.custom.idam.firstname $first
+            #ACCESS::session data set session.custom.idam.sam [concat [string range $first 0 0]$last]
+            #ACCESS::session data set session.custom.idam.dn "CN=$commonName,$ldap_user_dn_suffix"
+            #ACCESS::session data set session.custom.idam.cn $commonName
+            #ACCESS::session data set session.custom.idam.fullcn $fullcn
         }
             #CERTPROC
                }
@@ -215,3 +214,5 @@ when ACCESS_ACL_ALLOWED {
     HTTP::cookie insert name "MSISAuthenticated" value "ABCD" path "/adfs"
     HTTP::cookie insert name "MSISLoopDetectionCookie" value "ABCD" path "/adfs"
 }
+
+
