@@ -48,6 +48,8 @@ try {
   var queryOptions = queryString.parse(query)
   var AttrUserName = req.params()[1]
   var AttrUserPrincipal = req.params()[2]
+  var AttrDisplayname = AttrUserName
+  var AttrUserRole = 'ClaimsUser'
 
       /* If incoming request is IDP initiated, the Querystrings will not
        be populated, so lets check, and if undefined, populate with static
@@ -89,7 +91,9 @@ try {
     audiences: wtrealm,
     attributes: {
       'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress': AttrUserName,
-      'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn': AttrUserPrincipal
+      'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn': AttrUserPrincipal,
+      'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': AttrUserRole,
+      'http://schemas.microsoft.com/ws/2008/06/identity/claims/userdata': AttrDisplayname
     }
   }
       /* Sign the Assertion */
@@ -104,4 +108,5 @@ try {
 
 // Start listening for ILX::call and ILX::notify events.
 ilx.listen()
+
 

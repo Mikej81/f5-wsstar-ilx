@@ -1,3 +1,11 @@
+#  May require some cleaning on the SharePoint side.
+#  https://docs.microsoft.com/en-us/powershell/module/sharepoint-server/Remove-SPUser?view=sharepoint-ps
+#  https://docs.microsoft.com/en-us/powershell/module/sharepoint-server/New-SPUser?view=sharepoint-ps
+#  going to need adjustments on the claim mappings and values passed, as needed for the environments.
+#
+#  Currently 'hard coded' values, so need to create dynamic logic and seperate all primitives
+#
+
 when HTTP_REQUEST {
   # save hostname for use in response
   set fqdn_name [HTTP::host]
@@ -80,8 +88,7 @@ when HTTP_REQUEST {
                 not ( [HTTP::cookie exists FedAuth] ) &&
                 [ACCESS::session data get session.custom.idam.wsfedtoken] ne ""} {
                 node 127.0.0.1
-                log local0. "...MRHSession && WSFedToken Exist, FedAuth Cookie Does Not... "
-
+                
                 #  tmpresponse is the WS-Fed Assertion data, unencoded, so straight XML
                 set tmpresponse [ACCESS::session data get session.custom.idam.wsfedtoken]
         
@@ -89,7 +96,7 @@ when HTTP_REQUEST {
                 #  SharePoint, this was the easiest way to solve that issue.  Set timeout
                 #  to half a second, but can be adjusted as needed.
                 set currentHost [HTTP::host]
-                set htmltop "<html><script type='text/javascript'>window.onload=function(){ window.setTimeout(document.wsFedAuth.submit.bind(document.wsFedAuth), 500);};</script><body>"
+                set htmltop "<html><script type='text/javascript'>window.onload=function(){ window.setTimeout(document.wsFedAuth.submit.bind(document.wsFedAuth), 50000);};</script><body>"
                 set htmlform "<form name='wsFedAuth' method=POST action='https://$currentHost/_trust/default.aspx?trust=FakeADFS'><input type=hidden name=wa value=$wa><input type=hidden name=wresult value='$tmpresponse'><input type=hidden name=wctx value=$wctx><input type='submit' value='Continue'></form/>"
                 set htmlbottom "</body></html>"
                 set page "$htmltop $htmlform $htmlbottom"
@@ -113,24 +120,30 @@ when ACCESS_POLICY_AGENT_EVENT {
                     #  which is queried based on the logon name (email), and the UPN is retrieved
                     #  from LDAP.
     
-
-                    set AttrUserName [ACCESS::session data get session.logon.last.username]
-                    set AttrUserPrin [ACCESS::session data get session.ldap.last.attr.userPrincipalName ]
+                    if { [ACCESS::session data get session.custom.idam.usesmartcard] ne "true" } {
+                      set AttrUserName [ACCESS::session data get session.logon.last.username]
+                      set AttrUserPrin [ACCESS::session data get session.ldap.last.attr.userPrincipalName]
+                      set AttrUserEmail [ACCESS::session data get session.ldap.last.attr.userPrincipalName]
+                    } else {
+                      set AttrUserName [ACCESS::session data get session.custom.idam.tmpcn]
+                      set AttrUserPrin [ACCESS::session data get session.custom.idam.upn]
+                      set AttrUserEmail [ACCESS::session data get session.custom.idam.email]
+                    }
                     log local0. "Received Process request for FakeADFS, $AttrUserName, $AttrUserPrin, $payload"
-                    set wsfed_response [ILX::call $fakeadfs_handle Generate-WSFedToken $payload $AttrUserName $AttrUserPrin]
-                    ACCESS::session data set session.custom.idam.wsfedtoken $wsfed_response  
+                    set wsfed_response [ILX::call $fakeadfs_handle Generate-WSFedToken $payload $AttrUserName $AttrUserPrin $AttrUserEmail]
+                    ACCESS::session data set session.custom.idam.wsfedtoken $wsfed_response
                }
                "CERTPROC" {
-                           if { [ACCESS::session data get session.ssl.cert.x509extension] contains "othername:UPN<" } {
-                set tmpupn [findstr [ACCESS::session data get session.ssl.cert.x509extension] "othername:UPN<" 14 ">"]
-                ACCESS::session data set session.custom.idam.upn $tmpupn
-                log local0. "Extracted EDIPI: $tmpupn"
-            }
+                 ACCESS::session data set session.custom.idam.usesmartcard "true"
+                 if { [ACCESS::session data get session.ssl.cert.x509extension] contains "othername:UPN<" } {
+                    set tmpupn [findstr [ACCESS::session data get session.ssl.cert.x509extension] "othername:UPN<" 14 ">"]
+                    ACCESS::session data set session.custom.idam.upn $tmpupn
+                    log local0. "Extracted EDIPI: $tmpupn"
+                 }
             if { [ACCESS::session data get session.ssl.cert.x509extension] contains "email:" } {
               set tmpemail [findstr [ACCESS::session data get session.ssl.cert.x509extension] "email:" 6 " "]
               regexp {[a-zA-Z.0-9]+@[a-zA-Z.0-9]+\.[a-zA-Z]{2,}} $tmpemail cleanemail
               ACCESS::session data set session.custom.idam.email $cleanemail
-              ACCESS::session data set session.logon.last.username $cleanemail
               log local0. "Extracted Email Field: $cleanemail"
             }
             if { [ACCESS::session data get session.ssl.cert.subject] contains "CN="} {
@@ -214,5 +227,12 @@ when ACCESS_ACL_ALLOWED {
     HTTP::cookie insert name "MSISAuthenticated" value "ABCD" path "/adfs"
     HTTP::cookie insert name "MSISLoopDetectionCookie" value "ABCD" path "/adfs"
 }
+
+when HTTP_RESPONSE {
+    HTTP::collect 32000000
+    set length [HTTP::payload length]
+	HTTP::header replace "Content-Length" $length
+}
+
 
 
