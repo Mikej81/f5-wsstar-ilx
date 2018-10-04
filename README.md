@@ -13,8 +13,8 @@ May work better building from scratch in some environments.
 https://devcentral.f5.com/articles/big-ip-iruleslx-fakeadfs-ws-federation-saml11-24608
 
 ## Configuration
-SharePoint
-Exchange https://github.com/Mikej81/f5-fakeadfs-ilx/blob/master/EXCHANGE.md
+* SharePoint https://github.com/Mikej81/f5-fakeadfs-ilx/blob/master/F5%20ADFS%20iRulesLX%20Implementation.pdf
+* Exchange https://github.com/Mikej81/f5-fakeadfs-ilx/blob/master/EXCHANGE.md
 
 ## Usage
 IDP initiated use-case requires a single VS, it does not require any SAML IDP or SP configurations as the initial Client Auth can be anything, the WS-Fed assertion is generated on the Server side, and posted to the Application.
