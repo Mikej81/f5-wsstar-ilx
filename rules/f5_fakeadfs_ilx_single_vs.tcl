@@ -1,6 +1,4 @@
 when HTTP_REQUEST {
-  # save hostname for use in response
-  set fqdn_name [HTTP::host]
   
     switch -glob [string tolower [HTTP::path]] {
         "*/federationmetadata/2007-06/federationmetadata.xml" {
@@ -60,21 +58,15 @@ when HTTP_REQUEST {
             }
         }
         default {
-        log local0. "::Default path::"
-        #  Wctx: This is some session data that the application wants sent back to 
-        #  it after the user authenticates.
-        set wctx [URI::decode [URI::query [HTTP::uri] wctx]]
-        #  Wa=signin1.0: This tells the ADFS server to invoke a login for the user.
-        set wa [URI::decode [URI::query [HTTP::uri] wa]]
-        #  Wtrealm: This tells ADFS what application I was trying to get to. 
-        #  This has to match the identifier of one of the relying party trusts 
-        #  listed in ADFS.  wtrealm is used in the Node.JS side, but we dont need it 
-        #  here.
-        
-        #log local0. "Cookie: [HTTP::cookie MRHSession]"
-        #log local0. "Cookie: [HTTP::cookie FedAuth]"
-        #log local0. "Method: [HTTP::method]"
-        #log local0. "wsFed:  [ACCESS::session data get session.custom.idam.wsfedtoken]"
+            #  Wctx: This is some session data that the application wants sent back to 
+            #  it after the user authenticates.
+            set wctx [URI::decode [URI::query [HTTP::uri] wctx]]
+            #  Wa=signin1.0: This tells the ADFS server to invoke a login for the user.
+            set wa [URI::decode [URI::query [HTTP::uri] wa]]
+            #  Wtrealm: This tells ADFS what application I was trying to get to. 
+            #  This has to match the identifier of one of the relying party trusts 
+            #  listed in ADFS.  wtrealm is used in the Node.JS side, but we dont need it 
+            #  here.
         
             if {[HTTP::cookie exists MRHSession] && 
                 ([HTTP::method] ne "POST") &&
@@ -155,4 +147,5 @@ when ACCESS_ACL_ALLOWED {
     HTTP::cookie insert name "MSISAuthenticated" value "ABCD" path "/adfs"
     HTTP::cookie insert name "MSISLoopDetectionCookie" value "ABCD" path "/adfs"
 }
+
 

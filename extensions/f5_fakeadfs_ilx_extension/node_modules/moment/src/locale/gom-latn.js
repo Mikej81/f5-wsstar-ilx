@@ -11,7 +11,7 @@ function processRelativeTime(number, withoutSuffix, key, isFuture) {
         'm': ['eka mintan', 'ek minute'],
         'mm': [number + ' mintanim', number + ' mintam'],
         'h': ['eka horan', 'ek hor'],
-        'hh': [number + ' horanim', number + ' horam'],
+        'hh': [number + ' horanim', number + ' hor'],
         'd': ['eka disan', 'ek dis'],
         'dd': [number + ' disanim', number + ' dis'],
         'M': ['eka mhoinean', 'ek mhoino'],

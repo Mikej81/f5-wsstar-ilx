@@ -128,9 +128,10 @@ when ACCESS_POLICY_AGENT_EVENT {
                       set AttrUserName [ACCESS::session data get session.custom.idam.tmpcn]
                       set AttrUserPrin [ACCESS::session data get session.custom.idam.upn]
                       set AttrUserEmail [ACCESS::session data get session.custom.idam.email]
+                      set AttrUserSID [ACCESS::session data get session.ldap.last.attr.objectSid]
                     }
                     log local0. "Received Process request for FakeADFS, $AttrUserName, $AttrUserPrin, $payload"
-                    set wsfed_response [ILX::call $fakeadfs_handle Generate-WSFedToken $payload $AttrUserName $AttrUserPrin $AttrUserEmail]
+                    set wsfed_response [ILX::call $fakeadfs_handle Generate-WSFedToken $payload $AttrUserName $AttrUserPrin $AttrUserEmail $AttrUserSID]
                     ACCESS::session data set session.custom.idam.wsfedtoken $wsfed_response
                }
                "CERTPROC" {
@@ -233,6 +234,9 @@ when HTTP_RESPONSE {
     set length [HTTP::payload length]
 	HTTP::header replace "Content-Length" $length
 }
+
+
+
 
 
 

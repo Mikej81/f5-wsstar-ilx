@@ -42,6 +42,20 @@ try {
     /* Extract the ILX parameters to add to the Assertion data
        req.params()[0] is the first passed argument
        req.params()[1] is the second passed argument, and so on.
+
+    Exchange uses/requires sid and upn
+       
+    "attributes": {
+      "email": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+      "sid" : "http://schemas.microsoft.com/ws/2008/06/identity/claims/primarysid",
+      "upn": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn",
+      "givenname": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname",
+      "displayname": "http://schemas.microsoft.com/ws/2008/06/identity/claims/userdata",
+      "surname": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname",
+      "group": "http://schemas.xmlsoap.org/claims/Group",
+      "role": "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
+      "windowsaccount": "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname"
+    }
     */
 
   var query = queryString.unescape(req.params()[0])
@@ -50,6 +64,7 @@ try {
   var AttrUserPrincipal = req.params()[2]
   var AttrDisplayname = AttrUserName
   var AttrUserRole = 'ClaimsUser'
+  var AttrUserSID = req.params()[4]
 
       /* If incoming request is IDP initiated, the Querystrings will not
        be populated, so lets check, and if undefined, populate with static
@@ -93,7 +108,8 @@ try {
       'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress': AttrUserName,
       'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn': AttrUserPrincipal,
       'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': AttrUserRole,
-      'http://schemas.microsoft.com/ws/2008/06/identity/claims/userdata': AttrDisplayname
+      'http://schemas.microsoft.com/ws/2008/06/identity/claims/userdata': AttrDisplayname,
+      'http://schemas.microsoft.com/ws/2008/06/identity/claims/primarysid': AttrUserSID
     }
   }
       /* Sign the Assertion */
@@ -108,5 +124,8 @@ try {
 
 // Start listening for ILX::call and ILX::notify events.
 ilx.listen()
+
+
+
 
 
