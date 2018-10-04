@@ -40,6 +40,7 @@ Get-OwaVirtualDirectory | Set-OwaVirtualDirectory -AdfsAuthentication $true -Bas
 
 Restart-Service W3SVC,WAS
 ```
+* Reference:  https://technet.microsoft.com/library/dn635116(v=exchg.150).aspx
 
 ## APM Configuration
 Most of the configs should match the sharepoint guidance.  You want to ensure that you are quering for the extra fields if they are not available in your MFA tokens.  As mentioned previously concerning claims, the attributes are userPrincipalName and objectSid.
