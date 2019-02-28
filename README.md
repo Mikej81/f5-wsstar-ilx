@@ -12,7 +12,7 @@ May work better building from scratch in some environments.
 
 https://devcentral.f5.com/articles/big-ip-iruleslx-fakeadfs-ws-federation-saml11-24608
 
-## Configuration
+## Example Configuration
 * SharePoint https://github.com/Mikej81/f5-fakeadfs-ilx/blob/master/F5%20ADFS%20iRulesLX%20Implementation.pdf
 * Exchange https://github.com/Mikej81/f5-fakeadfs-ilx/blob/master/EXCHANGE.md
 
@@ -32,3 +32,4 @@ Working on adding Ws-Trust support.  FederationMetadata is mostly complete, endp
 * 0.3.0 Multiple FQDN Support added - Jeff larmore
 * 0.3.1 STS Federation Metadata Support added; any endpoint ending with FederationMetadata.xml
 * 0.4.0 Extensive code changes, cleanup, and other modifications to support 13.x and fix IDP/SP initiated paths.
+* 0.5.0 WS-Trust - Added template and code for initial RST generation.

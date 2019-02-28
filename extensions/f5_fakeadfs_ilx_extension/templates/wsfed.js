@@ -61,7 +61,7 @@ exports.create = function(options, callback) {
   var wsdoc;
   try {
     doc = new Parser().parseFromString(saml11.toString());
-	wsdoc = new Parser().parseFromString(wsfed.toString());
+  wsdoc = new Parser().parseFromString(wsfed.toString());
   } catch(err){
     return utils.reportError(err, callback);
   }
@@ -153,7 +153,7 @@ exports.create = function(options, callback) {
     console.log(signedSaml.toString())
     var wsFedstring = wsdoc.toString();
     var finalFed = wsFedstring.replace('<saml:Assertion xmlns:saml=""/>', signedSaml)
-    
+
     console.log(finalFed)
     return finalFed;
   }
