@@ -32,4 +32,4 @@ Working on adding Ws-Trust support.  FederationMetadata is mostly complete, endp
 * 0.3.0 Multiple FQDN Support added - Jeff larmore
 * 0.3.1 STS Federation Metadata Support added; any endpoint ending with FederationMetadata.xml
 * 0.4.0 Extensive code changes, cleanup, and other modifications to support 13.x and fix IDP/SP initiated paths.
-* 0.5.0 WS-Trust - Added template and code for initial RST generation.
+* 0.5.0 WS-Trust - RST and RSTR generation, not added to an ILX release yet.
