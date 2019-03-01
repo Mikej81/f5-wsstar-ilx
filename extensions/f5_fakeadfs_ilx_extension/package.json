@@ -22,7 +22,7 @@
     "querystring": "^0.2.0",
     "read-config": "^2.0.0",
     "url": "^0.11.0",
-    "ws-star": "^0.1.0",
+    "ws-star": "^0.1.1",
     "xml-crypto": "^0.10.1",
     "xml-encryption": "^0.11.1",
     "xmldom": "^0.1.27"

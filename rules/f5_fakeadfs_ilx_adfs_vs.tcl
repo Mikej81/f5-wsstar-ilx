@@ -113,7 +113,8 @@ when HTTP_REQUEST {
 	    if { $adfsdebug } { log local0. "Video Sent to Browser"}
       }
   "/adfs/services/trust/13/usernamemixed" {
-
+      set wstrust_response [ILX::call $fakeadfs_handle Generate-WSTrustToken $payload $AttrSurName $AttrUserPrin $AttrGivenName $AttrEmailAddress $AttrDisplayName]
+      ACCESS::session data set session.custom.idam.wstrustrstr $fakeadfs_response
     }
     default {
     	#########################

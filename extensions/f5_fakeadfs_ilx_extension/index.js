@@ -25,6 +25,7 @@ var SigningCert = fs.readFileSync(path.join(__dirname, config.federation.certs.t
 var SigningKey = fs.readFileSync(path.join(__dirname, config.federation.certs.tokensigningkey));
 
 var wsfed = require('ws-star').WSFed;
+var wstrust = require('ws-star').WSTrust;
 
 /* These are for IDP initated SSO requets, since the Querystring will be
    blank.
@@ -44,14 +45,26 @@ ilx.addMethod('Generate-WSTrustToken', function(req, res) {
   var AttrUserName = req.params()[1]
   var AttrUserPrincipal = req.params()[2]
   var AttrDisplayname = AttrUserName
-  var AttrUserRole = 'ClaimsUser'
-  var AttrUserSID = req.params()[4]
 
-  var relyingpartners = config.federation
-  var EndPointfilter = jsonQuery('relyingpartners[name=' + wtrealm + '].options.endpoints.url', { data: relyingpartners})
-  var endPoint = EndPointfilter.value
-
+  var rstr_options = {
+    cert: SigningCert,
+    key: SigningKey,
+    issuer: 'https://fakeadfs.domain.com',
+    lifetimeInSeconds: timeout,
+    scope: 'urn:wt-trust:client',
+    attributes: {
+      'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': AttrDisplayname,
+      'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn': AttrUserPrincipal
+    }
   }
+
+  } catch(err) {
+    res.reply("error: " + e.message + ", stack: " + e.stack);
+    return;
+  }
+
+  var rstr = wstrust.createrstr(rstr_options);
+  res.reply(rstr);
 })
 
 ilx.addMethod('Generate-WSFedToken', function(req, res) {
