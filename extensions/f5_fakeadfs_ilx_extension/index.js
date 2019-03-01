@@ -24,7 +24,7 @@ var wsfedIssuer = config.federation.issuer;
 var SigningCert = fs.readFileSync(path.join(__dirname, config.federation.certs.tokensigningcert));
 var SigningKey = fs.readFileSync(path.join(__dirname, config.federation.certs.tokensigningkey));
 
-var wsfed = require('./templates').WSFed;
+var wsfed = require('ws-star').WSFed;
 
 /* These are for IDP initated SSO requets, since the Querystring will be
    blank.
@@ -37,6 +37,23 @@ var idp_WCTX = ''
 // Create a new rpc server for listening to TCL iRule calls.
 var ilx = new f5.ILXServer();
 
+ilx.addMethod('Generate-WSTrustToken', function(req, res) {
+  try{
+  var query = queryString.unescape(req.params()[0])
+  var queryOptions = queryString.parse(query)
+  var AttrUserName = req.params()[1]
+  var AttrUserPrincipal = req.params()[2]
+  var AttrDisplayname = AttrUserName
+  var AttrUserRole = 'ClaimsUser'
+  var AttrUserSID = req.params()[4]
+
+  var relyingpartners = config.federation
+  var EndPointfilter = jsonQuery('relyingpartners[name=' + wtrealm + '].options.endpoints.url', { data: relyingpartners})
+  var endPoint = EndPointfilter.value
+
+  }
+})
+
 ilx.addMethod('Generate-WSFedToken', function(req, res) {
 try {
     /* Extract the ILX parameters to add to the Assertion data
@@ -44,7 +61,7 @@ try {
        req.params()[1] is the second passed argument, and so on.
 
     Exchange uses/requires sid and upn
-       
+
     "attributes": {
       "email": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
       "sid" : "http://schemas.microsoft.com/ws/2008/06/identity/claims/primarysid",
@@ -116,7 +133,7 @@ try {
   var signedAssertion = wsfed.create(wsfed_options)
 
   } catch (e) {
-    res.reply("error: " + e.message + ", stack: " + e.stack); 
+    res.reply("error: " + e.message + ", stack: " + e.stack);
     return;
   }
   res.reply(signedAssertion);
