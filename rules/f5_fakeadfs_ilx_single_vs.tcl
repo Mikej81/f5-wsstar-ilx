@@ -116,11 +116,6 @@ when ACCESS_POLICY_AGENT_EVENT {
                     set wsfed_response [ILX::call $fakeadfs_handle Generate-WSFedToken $payload $AttrUserName $AttrUserPrin]
                     ACCESS::session data set session.custom.idam.wsfedtoken $wsfed_response
                }
-               "WSTRUST" {
-                    log local0. "Recieved Process request for FakeADFS WS-Trust, $AttrUserName, $payload"
-                    set wstrust_response [ILX::call $fakeadfs_handle Generate-RST $AttrUserName $payload]
-                    ACCESS::session data set session.custom.idam.wstrustrst $wstrust_response
-               }
     }
 }
 
